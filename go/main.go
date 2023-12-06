@@ -146,5 +146,6 @@ func main() {
 	locationList := whiLocationList("https://locations.wafflehouse.com/api/587d236eeb89fb17504336db/locations-details")
 	whiIndex := whiCompute(locationList)
 	fmt.Println(whiIndex)
-
+	color := computeColor(whiIndex)
+	fmt.Println(color)
 }
