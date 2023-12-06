@@ -114,7 +114,12 @@ func whiCompute(locations []Location) map[string]float64 {
 
 	// Count the frequency of different statuses
 	for _, loc := range locations {
-		statusCounts[loc.Status]++
+		status := "Open"
+		if loc.Closed == true {
+			status = "Closed"
+			statusCounts[status]++
+		}
+		statusCounts[status]++
 	}
 
 	// Compute Waffle House Index
@@ -127,11 +132,19 @@ func whiCompute(locations []Location) map[string]float64 {
 	return whiIndex
 }
 
+func computeColor(index map[string]float64) string {
+	if index["Closed"] > 66 {
+		return "Red"
+	} else if index["Closed"] > 33 {
+		return "Yellow"
+	} else {
+		return "Green"
+	}
+}
+
 func main() {
 	locationList := whiLocationList("https://locations.wafflehouse.com/api/587d236eeb89fb17504336db/locations-details")
 	whiIndex := whiCompute(locationList)
 	fmt.Println(whiIndex)
-	//// Compute the Waffle House Index
-	//whiIndex := whiCompute(locationInfo)
-	//fmt.Println(whiIndex)
+
 }
