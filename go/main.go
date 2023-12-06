@@ -126,7 +126,7 @@ func whiCompute(locations []Location) map[string]float64 {
 	whiIndex := make(map[string]float64)
 	totalStores := len(locations)
 	for status, count := range statusCounts {
-		whiIndex[status] = float64(count) / float64(totalStores)
+		whiIndex[status] = (float64(count) / float64(totalStores)) * 100
 	}
 
 	return whiIndex
