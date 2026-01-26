@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="WHI Hot Reload" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="additionalArgs" value="-d emulator-5554 --hot" />
+    <option name="filePath" value="$PROJECT_DIR$/whi_flutter/lib/main.dart" />
+    <option name="buildMode" value="DEBUG" />
+    <option name="openInspectorOnAppStart" value="true" />
+    <method v="2" />
+  </configuration>
+</component>

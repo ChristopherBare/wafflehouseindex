@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="WHI Flutter Emulator" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="additionalArgs" value="-d emulator-5554" />
+    <option name="filePath" value="$PROJECT_DIR$/whi_flutter/lib/main.dart" />
+    <option name="buildMode" value="DEBUG" />
+    <option name="openInspectorOnAppStart" value="false" />
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Flutter Clean" run_configuration_type="ShConfigurationType" />
+    </method>
+  </configuration>
+</component>
