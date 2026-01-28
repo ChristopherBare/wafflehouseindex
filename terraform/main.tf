@@ -14,6 +14,10 @@ resource "aws_dynamodb_table" "whi_locations_cache" {
     enabled        = true
   }
 
+  lifecycle {
+    create_before_destroy = false
+  }
+
   tags = {
     Name        = "WHI Locations Cache"
     Environment = "production"
@@ -35,6 +39,10 @@ resource "aws_iam_role" "whi_lambda_role" {
       }
     }]
   })
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # IAM policy for Lambda
@@ -66,6 +74,10 @@ resource "aws_iam_policy" "whi_lambda_policy" {
       }
     ]
   })
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # Attach policy to role
@@ -374,55 +386,4 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   function_name = aws_lambda_function.whi_api.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.cache_refresh.arn
-}
-
-# S3 bucket for Terraform state (create this first before running terraform init)
-resource "aws_s3_bucket" "terraform_state" {
-  bucket = "whi-terraform-state"
-
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  tags = {
-    Name        = "WHI Terraform State"
-    Environment = "production"
-    Project     = "wafflehouseindex"
-  }
-}
-
-resource "aws_s3_bucket_versioning" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# DynamoDB table for Terraform state locking
-resource "aws_dynamodb_table" "terraform_lock" {
-  name           = "whi-terraform-lock"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "WHI Terraform Lock Table"
-    Environment = "production"
-    Project     = "wafflehouseindex"
-  }
 }
