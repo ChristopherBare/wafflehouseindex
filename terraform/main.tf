@@ -15,7 +15,7 @@ resource "aws_dynamodb_table" "whi_locations_cache" {
   }
 
   lifecycle {
-    create_before_destroy = false
+    create_before_destroy = true
   }
 
   tags = {
