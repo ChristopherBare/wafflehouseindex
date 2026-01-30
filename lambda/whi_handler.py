@@ -84,13 +84,17 @@ def fetch_locations_from_source() -> List[Dict]:
     try:
         data = json.loads(match.group(1))
         locations = data.get("props", {}).get("pageProps", {}).get("locations")
-        if not locations:
-            raise RuntimeError("No locations found in Next.js data")
     except (json.JSONDecodeError, KeyError) as e:
         raise RuntimeError(f"Failed to parse Next.js data: {e}")
 
+    if locations is None:
+        print("No locations field found in Next.js data; returning empty list")
+        return []
     if not isinstance(locations, list):
         raise RuntimeError(f"Unexpected locations format: {type(locations)}")
+    if not locations:
+        print("No locations found in Next.js data; returning empty list")
+        return []
 
     out = []
     for loc in locations:
@@ -122,7 +126,8 @@ def fetch_locations_from_source() -> List[Dict]:
         })
 
     if not out:
-        raise RuntimeError("No valid locations extracted from page data")
+        print("No valid locations extracted from page data; returning empty list")
+        return []
 
     return out
 

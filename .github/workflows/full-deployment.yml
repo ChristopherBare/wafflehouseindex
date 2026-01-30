@@ -96,9 +96,46 @@ jobs:
           echo "cloudfront_url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT
           echo "CloudFront URL: $CLOUDFRONT_URL"
 
+  get-backend-url:
+    name: Get Existing Backend URL
+    runs-on: ubuntu-latest
+    needs: [deploy-backend]
+    if: needs.deploy-backend.result == 'skipped'
+    outputs:
+      cloudfront_url: ${{ steps.get-url.outputs.cloudfront_url }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+          terraform_wrapper: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Get CloudFront URL
+        id: get-url
+        run: |
+          CLOUDFRONT_URL=""
+          if aws s3api head-bucket --bucket whi-terraform-state 2>/dev/null; then
+            cd terraform
+            terraform init -input=false 2>/dev/null || true
+            CLOUDFRONT_URL=$(terraform output -raw cloudfront_url 2>/dev/null || true)
+          fi
+
+          echo "cloudfront_url=$CLOUDFRONT_URL" >> "$GITHUB_OUTPUT"
+
   build-apps:
     name: Build Mobile Apps
-    needs: [deploy-backend]
+    needs: [deploy-backend, get-backend-url]
     if: |
       always() &&
       (github.event.inputs.build_apps == 'true' || needs.deploy-backend.result == 'skipped')
@@ -136,6 +173,9 @@ jobs:
 
           # Use CloudFront URL from backend deployment or empty for local
           CLOUDFRONT_URL="${{ needs.deploy-backend.outputs.cloudfront_url }}"
+          if [ -z "$CLOUDFRONT_URL" ]; then
+            CLOUDFRONT_URL="${{ needs.get-backend-url.outputs.cloudfront_url }}"
+          fi
 
           if [ ! -z "$CLOUDFRONT_URL" ]; then
             USE_PRODUCTION="true"
