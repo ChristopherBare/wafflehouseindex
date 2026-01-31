@@ -115,7 +115,8 @@ jobs:
             VERSION="${{ github.event.inputs.version_name }}"
             BUILD="${{ github.event.inputs.build_number }}"
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            VERSION="${{ github.ref_name#v }}"
+            REF_NAME="${{ github.ref_name }}"
+            VERSION="${REF_NAME#v}"
             BUILD="${{ github.run_number }}"
           else
             VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')"
@@ -297,7 +298,8 @@ jobs:
             VERSION="${{ github.event.inputs.version_name }}"
             BUILD="${{ github.event.inputs.build_number }}"
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            VERSION="${{ github.ref_name#v }}"
+            REF_NAME="${{ github.ref_name }}"
+            VERSION="${REF_NAME#v}"
             BUILD="${{ github.run_number }}"
           else
             VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')"
