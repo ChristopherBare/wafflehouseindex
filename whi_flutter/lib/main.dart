@@ -256,6 +256,28 @@ class _WHIHomePageState extends State<WHIHomePage> {
 
   Future<void> _initIap() async {
     if (kIsWeb) {
+      // Web-specific IAP initialization or mock setup
+      setState(() {
+        _iapAvailable = true;
+        _products = [
+          ProductDetails(
+            id: ApiConfig.premiumMonthlyProductId,
+            title: 'Waffle House Index Premium (Monthly)',
+            description: 'Monthly subscription for advanced features',
+            price: '\$4.99',
+            rawPrice: 4.99,
+            currencyCode: 'USD',
+          ),
+          ProductDetails(
+            id: ApiConfig.premiumAnnualProductId,
+            title: 'Waffle House Index Premium (Annual)',
+            description: 'Annual subscription with best value',
+            price: '\$49.99',
+            rawPrice: 49.99,
+            currencyCode: 'USD',
+          ),
+        ];
+      });
       return;
     }
 
@@ -288,7 +310,8 @@ class _WHIHomePageState extends State<WHIHomePage> {
       return;
     }
 
-    final response = await _iap.queryProductDetails(ApiConfig.premiumProductIds);
+    final response =
+        await _iap.queryProductDetails(ApiConfig.premiumProductIds);
     if (!mounted) return;
 
     setState(() {
@@ -330,6 +353,12 @@ class _WHIHomePageState extends State<WHIHomePage> {
   }
 
   Future<void> _buyProduct(ProductDetails product) async {
+    if (kIsWeb) {
+      // Simulate purchase for web
+      await _setPremium(true);
+      return;
+    }
+
     if (!_iapAvailable) return;
 
     final purchaseParam = PurchaseParam(productDetails: product);
@@ -340,6 +369,15 @@ class _WHIHomePageState extends State<WHIHomePage> {
   }
 
   Future<void> _restorePurchases() async {
+    if (kIsWeb) {
+      // For web, we might want to "restore" by just saying it's active
+      // or just checking preferences (which _loadPreferences already does).
+      // Here we can just simulate a successful check.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Purchases restored (simulated)')),
+      );
+      return;
+    }
     if (!_iapAvailable) return;
 
     await _iap.restorePurchases();
@@ -478,7 +516,6 @@ class _WHIHomePageState extends State<WHIHomePage> {
     }
   }
 
-  // API configuration - automatically detects platform and environment
   String get _apiBaseUrl {
     if (kIsWeb) {
       // Web app
@@ -490,21 +527,11 @@ class _WHIHomePageState extends State<WHIHomePage> {
     }
 
     // Platform checks (only works on non-web platforms)
-    try {
-      return ApiConfig.getApiBaseUrl(
-        isAndroid: Platform.isAndroid,
-        isIOS: Platform.isIOS,
-        isDesktop: Platform.isLinux || Platform.isMacOS || Platform.isWindows,
-      );
-    } catch (e) {
-      // Fallback if platform detection fails
-      print('Platform detection failed: $e');
-      return ApiConfig.getApiBaseUrl(
-        isAndroid: false,
-        isIOS: false,
-        isDesktop: true,
-      );
-    }
+    return ApiConfig.getApiBaseUrl(
+      isAndroid: Platform.isAndroid,
+      isIOS: Platform.isIOS,
+      isDesktop: Platform.isLinux || Platform.isMacOS || Platform.isWindows,
+    );
   }
 
   Future<Map<String, dynamic>> _fetchIndexFromAPI(
@@ -1143,7 +1170,7 @@ class MenuTab extends StatelessWidget {
                   const LinearProgressIndicator()
                 else if (!iapAvailable)
                   const Text(
-                    'Purchases are available on Android and iOS devices.',
+                    'Purchases are available on Android, iOS, and Web.',
                   )
                 else ...[
                   if (iapError != null)

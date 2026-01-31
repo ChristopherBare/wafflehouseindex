@@ -6,14 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="awedrf">
       <change beforePath="$PROJECT_DIR$/.github/workflows/build-app-stores.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build-app-stores.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/full-deployment.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/full-deployment.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/wafflehouseindex.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/wafflehouseindex.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lambda/whi_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/lambda/whi_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/android/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/android/settings.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/.metadata" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/.metadata" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/whi_flutter/lib/config.dart" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/lib/config.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/whi_flutter/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/lib/main.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/whi_flutter/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/pubspec.lock" afterDir="false" />
@@ -28,7 +23,7 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="419" />
+    <option name="cachedIndexableFilesCount" value="516" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -144,6 +139,8 @@
       <workItem from="1769724434225" duration="805000" />
       <workItem from="1769730911914" duration="76000" />
       <workItem from="1769731133633" duration="112000" />
+      <workItem from="1769893412099" duration="677000" />
+      <workItem from="1769894706246" duration="840000" />
     </task>
     <task id="LOCAL-00001" summary="awedrf">
       <option name="closed" value="true" />

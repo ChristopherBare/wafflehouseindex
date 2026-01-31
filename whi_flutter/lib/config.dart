@@ -6,7 +6,7 @@ class ApiConfig {
   static const bool useProduction = true;
 
   // Set to true to enable premium features for local testing
-  static const bool testPremiumEnabled = true;
+  static const bool testPremiumEnabled = false;
 
   // CloudFront URL from Terraform output (update after deployment)
   // Example: "https://d1234567890.cloudfront.net"
