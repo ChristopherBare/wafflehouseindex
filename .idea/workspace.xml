@@ -4,15 +4,8 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="awedrf">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/build-app-stores.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build-app-stores.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+    <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="Update for more devices and fix app bundler action error.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/.metadata" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/.metadata" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/lib/config.dart" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/lib/config.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whi_flutter/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,40 +51,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Flutter.WHI Flutter Emulator.executor&quot;: &quot;Run&quot;,
-    &quot;Flutter.main.dart.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHELLCHECK.PATH&quot;: &quot;/home/christopher/.local/share/JetBrains/IntelliJIdea2025.2/Shell Script/shellcheck&quot;,
-    &quot;Shell Script.Flutter Clean.executor&quot;: &quot;Run&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/christopher/IdeaProjects/wafflehouseindex&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Flutter.WHI Flutter Emulator.executor": "Run",
+    "Flutter.main.dart.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHELLCHECK.PATH": "/home/christopher/.local/share/JetBrains/IntelliJIdea2025.2/Shell Script/shellcheck",
+    "Shell Script.Flutter Clean.executor": "Run",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "master",
+    "io.flutter.reload.alreadyRun": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/christopher/IdeaProjects/wafflehouseindex/whi_flutter",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "AndroidSdkUpdater",
+    "show.migrate.to.gradle.popup": "false",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecapSpentCounter">
     <option name="endsOfQuotaMs" value="1769911217838" />
     <option name="spentUsd" value="0.0032793" />
@@ -140,7 +133,7 @@
       <workItem from="1769730911914" duration="76000" />
       <workItem from="1769731133633" duration="112000" />
       <workItem from="1769893412099" duration="677000" />
-      <workItem from="1769894706246" duration="840000" />
+      <workItem from="1769894706246" duration="1237000" />
     </task>
     <task id="LOCAL-00001" summary="awedrf">
       <option name="closed" value="true" />
@@ -158,7 +151,23 @@
       <option name="project" value="LOCAL" />
       <updated>1769581712503</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Update for more devices and fix app bundler action error.">
+      <option name="closed" value="true" />
+      <created>1769895658896</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1769895658896</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Update for more devices and fix app bundler action error.">
+      <option name="closed" value="true" />
+      <created>1769895835685</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1769895835685</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -171,7 +180,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="awedrf" />
-    <option name="LAST_COMMIT_MESSAGE" value="awedrf" />
+    <MESSAGE value="Update for more devices and fix app bundler action error." />
+    <option name="LAST_COMMIT_MESSAGE" value="Update for more devices and fix app bundler action error." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
