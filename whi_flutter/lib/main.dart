@@ -1483,6 +1483,23 @@ double zoomForRadius(double radius) {
   return 5.5;
 }
 
+class BasicLocation {
+  final String id;
+  final String? name;
+  final String? city;
+  final String? state;
+  final double lat;
+  final double lon;
+  BasicLocation({
+    required this.id,
+    this.name,
+    this.city,
+    this.state,
+    required this.lat,
+    required this.lon,
+  });
+}
+
 class LocationDetail {
   final String id;
   final String? name;

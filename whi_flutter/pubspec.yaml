@@ -1,4 +1,4 @@
-name: WaffleHouseIndex
+name: whi_flutter
 description: A Flutter app to display the Waffle House Index near the user's current location (within 50 miles or more).
 publish_to: 'none'
 version: 0.1.0+1
@@ -27,3 +27,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  # Flutter 3.27 lacks Color.toARGB32 used by geolocator_android 5.x.
+  geolocator_android: 4.6.2
