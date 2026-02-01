@@ -599,6 +599,32 @@ jobs:
           flutter pub get
           flutter create . --platforms=linux
 
+      - name: Setup Flutter Linux Engine
+        run: |
+          cd whi_flutter
+
+          # Get Flutter SDK path
+          FLUTTER_SDK=$(which flutter | xargs dirname | xargs dirname)
+          ENGINE_PATH="$FLUTTER_SDK/bin/cache/artifacts/engine/linux-x64"
+          EPHEMERAL_DIR="linux/flutter/ephemeral"
+
+          # Copy engine binaries and data files
+          cp "$ENGINE_PATH/libflutter_linux_gtk.so" "$EPHEMERAL_DIR/" 2>/dev/null || true
+          cp "$ENGINE_PATH/icudtl.dat" "$EPHEMERAL_DIR/" 2>/dev/null || true
+          cp "$ENGINE_PATH/libpath_ops.so" "$EPHEMERAL_DIR/" 2>/dev/null || true
+          cp "$ENGINE_PATH/libtessellator.so" "$EPHEMERAL_DIR/" 2>/dev/null || true
+
+          # Copy headers if release version doesn't have them
+          if [ ! -d "$EPHEMERAL_DIR/flutter_linux" ]; then
+            if [ -d "$FLUTTER_SDK/bin/cache/artifacts/engine/linux-x64-release/flutter_linux" ]; then
+              cp -r "$FLUTTER_SDK/bin/cache/artifacts/engine/linux-x64-release/flutter_linux" "$EPHEMERAL_DIR/"
+            elif [ -d "$FLUTTER_SDK/bin/cache/artifacts/engine/linux-x64/flutter_linux" ]; then
+              cp -r "$FLUTTER_SDK/bin/cache/artifacts/engine/linux-x64/flutter_linux" "$EPHEMERAL_DIR/"
+            fi
+          fi
+
+          echo "✅ Flutter Linux engine setup complete"
+
       - name: Set Version and Build Number
         run: |
           cd whi_flutter
