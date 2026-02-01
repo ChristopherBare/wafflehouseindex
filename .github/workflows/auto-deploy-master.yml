@@ -258,6 +258,11 @@ jobs:
           cd whi_flutter
           flutter pub get
 
+      - name: Clean Flutter Build Cache
+        run: |
+          cd whi_flutter
+          flutter clean
+
       - name: Update Version
         run: |
           cd whi_flutter
