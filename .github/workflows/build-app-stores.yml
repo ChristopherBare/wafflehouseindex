@@ -111,20 +111,28 @@ jobs:
         id: version
         run: |
           cd whi_flutter
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version_name }}"
-            BUILD="${{ github.event.inputs.build_number }}"
+            # Manual trigger - use provided values or auto-increment
+            if [ ! -z "${{ github.event.inputs.version_name }}" ]; then
+              VERSION="${{ github.event.inputs.version_name }}"
+              BUILD="${{ github.event.inputs.build_number }}"
+            else
+              # Auto-increment based on commits
+              eval "$(./scripts/get-version.sh)"
+              VERSION="$version_name"
+              BUILD="$build_number"
+            fi
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag-based release - extract version from tag
             REF_NAME="${{ github.ref_name }}"
             VERSION="${REF_NAME#v}"
-            BUILD="${{ github.run_number }}"
+            BUILD="1"
           else
-            VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')"
-            BUILD="${{ github.run_number }}"
-          fi
-
-          if [ -z "$VERSION" ]; then
-            VERSION="1.0.0"
+            # Regular push to master - auto-increment build number
+            eval "$(./scripts/get-version.sh)"
+            VERSION="$version_name"
+            BUILD="$build_number"
           fi
 
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
@@ -257,7 +265,7 @@ jobs:
       - name: Upload Android App Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: android-app-bundle-${{ github.event.inputs.build_mode }}
+          name: android-app-bundle-${{ github.event.inputs.build_mode || 'debug' }}
           path: |
             whi_flutter/build/app/outputs/bundle/*/app-*.aab
           retention-days: 30
@@ -310,20 +318,28 @@ jobs:
         id: version
         run: |
           cd whi_flutter
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version_name }}"
-            BUILD="${{ github.event.inputs.build_number }}"
+            # Manual trigger - use provided values or auto-increment
+            if [ ! -z "${{ github.event.inputs.version_name }}" ]; then
+              VERSION="${{ github.event.inputs.version_name }}"
+              BUILD="${{ github.event.inputs.build_number }}"
+            else
+              # Auto-increment based on commits
+              eval "$(./scripts/get-version.sh)"
+              VERSION="$version_name"
+              BUILD="$build_number"
+            fi
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag-based release - extract version from tag
             REF_NAME="${{ github.ref_name }}"
             VERSION="${REF_NAME#v}"
-            BUILD="${{ github.run_number }}"
+            BUILD="1"
           else
-            VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')"
-            BUILD="${{ github.run_number }}"
-          fi
-
-          if [ -z "$VERSION" ]; then
-            VERSION="1.0.0"
+            # Regular push to master - auto-increment build number
+            eval "$(./scripts/get-version.sh)"
+            VERSION="$version_name"
+            BUILD="$build_number"
           fi
 
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
@@ -475,7 +491,7 @@ jobs:
       - name: Upload iOS Build
         uses: actions/upload-artifact@v4
         with:
-          name: ios-app-${{ github.event.inputs.build_mode }}
+          name: ios-app-${{ github.event.inputs.build_mode || 'debug' }}
           path: |
             whi_flutter/build/ios/iphoneos/
             whi_flutter/ios/build/ipa/
@@ -544,20 +560,28 @@ jobs:
         id: version
         run: |
           cd whi_flutter
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version_name }}"
-            BUILD="${{ github.event.inputs.build_number }}"
+            # Manual trigger - use provided values or auto-increment
+            if [ ! -z "${{ github.event.inputs.version_name }}" ]; then
+              VERSION="${{ github.event.inputs.version_name }}"
+              BUILD="${{ github.event.inputs.build_number }}"
+            else
+              # Auto-increment based on commits
+              eval "$(./scripts/get-version.sh)"
+              VERSION="$version_name"
+              BUILD="$build_number"
+            fi
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag-based release - extract version from tag
             REF_NAME="${{ github.ref_name }}"
             VERSION="${REF_NAME#v}"
-            BUILD="${{ github.run_number }}"
+            BUILD="1"
           else
-            VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')"
-            BUILD="${{ github.run_number }}"
-          fi
-
-          if [ -z "$VERSION" ]; then
-            VERSION="1.0.0"
+            # Regular push to master - auto-increment build number
+            eval "$(./scripts/get-version.sh)"
+            VERSION="$version_name"
+            BUILD="$build_number"
           fi
 
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
@@ -741,14 +765,14 @@ jobs:
         if: needs.build-android.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: android-app-bundle-${{ github.event.inputs.build_mode }}
+          name: android-app-bundle-${{ github.event.inputs.build_mode || 'debug' }}
           path: ./artifacts/android/
 
       - name: Download iOS Artifact
         if: needs.build-ios.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: ios-app-${{ github.event.inputs.build_mode }}
+          name: ios-app-${{ github.event.inputs.build_mode || 'debug' }}
           path: ./artifacts/ios/
 
       - name: Download Linux Artifact

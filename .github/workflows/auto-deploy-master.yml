@@ -189,14 +189,19 @@ jobs:
       - name: Extract Version from Tag or Use Default
         id: version
         run: |
+          cd whi_flutter
+
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag-based release
             VERSION="${{ github.ref_name }}"
             VERSION="${VERSION#v}"  # Remove 'v' prefix
             echo "version_name=$VERSION" >> $GITHUB_OUTPUT
-            echo "build_number=${{ github.run_number }}" >> $GITHUB_OUTPUT
+            echo "build_number=1" >> $GITHUB_OUTPUT
           else
-            echo "version_name=${{ env.DEFAULT_VERSION }}" >> $GITHUB_OUTPUT
-            echo "build_number=${{ env.DEFAULT_BUILD_NUMBER }}" >> $GITHUB_OUTPUT
+            # Regular push to master - auto-increment build number
+            eval "$(./scripts/get-version.sh)"
+            echo "version_name=$version_name" >> $GITHUB_OUTPUT
+            echo "build_number=$build_number" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup Java (Android only)
