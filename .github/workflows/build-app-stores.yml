@@ -593,6 +593,12 @@ jobs:
           cd whi_flutter
           flutter clean
 
+      - name: Regenerate Flutter Platform Files
+        run: |
+          cd whi_flutter
+          flutter pub get
+          flutter create . --platforms=linux
+
       - name: Set Version and Build Number
         run: |
           cd whi_flutter
