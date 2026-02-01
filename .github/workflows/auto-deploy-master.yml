@@ -230,10 +230,18 @@ jobs:
           /// Auto-configured by GitHub Actions
           class ApiConfig {
             static const bool useProduction = true;
+            static const bool testPremiumEnabled = false;
             static const String cloudfrontUrl = "$CLOUDFRONT_URL";
             static const String localUrlAndroid = "http://10.0.2.2:8000";
             static const String localUrlDesktop = "http://localhost:8000";
             static const String localUrlIOS = "http://localhost:8000";
+
+            static const String premiumMonthlyProductId = "whi_premium_monthly";
+            static const String premiumAnnualProductId = "whi_premium_annual";
+            static const Set<String> premiumProductIds = {
+              premiumMonthlyProductId,
+              premiumAnnualProductId,
+            };
 
             static String getApiBaseUrl({required bool isAndroid, required bool isIOS, required bool isDesktop}) {
               if (useProduction) {
