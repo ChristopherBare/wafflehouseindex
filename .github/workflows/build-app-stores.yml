@@ -90,6 +90,8 @@ jobs:
     needs: [resolve-backend-url]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.inputs.build_android == 'true'
+    outputs:
+      build_mode: ${{ steps.determine-mode.outputs.build_mode }}
 
     steps:
       - name: Checkout Repository
@@ -106,6 +108,16 @@ jobs:
         with:
           flutter-version: '3.27.1'
           cache: true
+
+      - name: Determine Build Mode
+        id: determine-mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUILD_MODE="${{ github.event.inputs.build_mode || 'debug' }}"
+          else
+            BUILD_MODE="debug"
+          fi
+          echo "build_mode=$BUILD_MODE" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Version and Build Number
         id: version
@@ -303,6 +315,8 @@ jobs:
     runs-on: macos-latest
     needs: [resolve-backend-url]
     if: github.event_name == 'push' || github.event.inputs.build_ios == 'true'
+    outputs:
+      build_mode: ${{ steps.determine-mode.outputs.build_mode }}
 
     steps:
       - name: Checkout Repository
@@ -313,6 +327,16 @@ jobs:
         with:
           flutter-version: '3.27.1'
           cache: true
+
+      - name: Determine Build Mode
+        id: determine-mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUILD_MODE="${{ github.event.inputs.build_mode || 'debug' }}"
+          else
+            BUILD_MODE="debug"
+          fi
+          echo "build_mode=$BUILD_MODE" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Version and Build Number
         id: version
@@ -759,24 +783,28 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-android, build-ios, build-linux]
     if: always() && (needs.build-android.result == 'success' || needs.build-ios.result == 'success' || needs.build-linux.result == 'success')
+    continue-on-error: true
 
     steps:
       - name: Download Android Artifact
         if: needs.build-android.result == 'success'
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: android-app-bundle-${{ github.event.inputs.build_mode || 'debug' }}
+          name: android-app-bundle-${{ needs.build-android.outputs.build_mode }}
           path: ./artifacts/android/
 
       - name: Download iOS Artifact
         if: needs.build-ios.result == 'success'
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: ios-app-${{ github.event.inputs.build_mode || 'debug' }}
+          name: ios-app-${{ needs.build-ios.outputs.build_mode }}
           path: ./artifacts/ios/
 
       - name: Download Linux Artifact
         if: needs.build-linux.result == 'success'
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: linux-app-bundle
