@@ -114,6 +114,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             BUILD_MODE="${{ github.event.inputs.build_mode || 'debug' }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            BUILD_MODE="release"
           else
             BUILD_MODE="debug"
           fi
@@ -224,7 +226,7 @@ jobs:
 
       # Create keystore for signing (you'll need to add these secrets)
       - name: Setup Android Signing
-        if: github.event.inputs.build_mode == 'release'
+        if: steps.determine-mode.outputs.build_mode == 'release'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
@@ -256,8 +258,9 @@ jobs:
       - name: Build Android App Bundle
         run: |
           cd whi_flutter
+          BUILD_MODE="${{ steps.determine-mode.outputs.build_mode }}"
 
-          if [ "${{ github.event.inputs.build_mode }}" == "release" ]; then
+          if [ "$BUILD_MODE" == "release" ]; then
             echo "🔨 Building Android App Bundle (Release)..."
             flutter build appbundle --release --build-name=${{ steps.version.outputs.version_name }} --build-number=${{ steps.version.outputs.build_number }}
           else
@@ -333,6 +336,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             BUILD_MODE="${{ github.event.inputs.build_mode || 'debug' }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            BUILD_MODE="release"
           else
             BUILD_MODE="debug"
           fi
@@ -443,7 +448,7 @@ jobs:
 
       # Install Apple certificates and provisioning profiles
       - name: Install Apple Certificate
-        if: github.event.inputs.build_mode == 'release'
+        if: steps.determine-mode.outputs.build_mode == 'release'
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
@@ -483,8 +488,9 @@ jobs:
       - name: Build iOS App
         run: |
           cd whi_flutter
+          BUILD_MODE="${{ steps.determine-mode.outputs.build_mode }}"
 
-          if [ "${{ github.event.inputs.build_mode }}" == "release" ]; then
+          if [ "$BUILD_MODE" == "release" ]; then
             echo "🔨 Building iOS App (Release)..."
             flutter build ios --release --no-codesign --build-name=${{ steps.version.outputs.version_name }} --build-number=${{ steps.version.outputs.build_number }}
 
@@ -508,18 +514,18 @@ jobs:
               echo "⚠️ Skipping IPA creation (no signing certificate)"
             fi
           else
-            echo "🔨 Building iOS App (Debug)..."
+            echo "🔨 Building iOS App (Debug Simulator)..."
             flutter build ios --debug --simulator --build-name=${{ steps.version.outputs.version_name }} --build-number=${{ steps.version.outputs.build_number }}
           fi
 
       - name: Upload iOS Build
         uses: actions/upload-artifact@v4
         with:
-          name: ios-app-${{ github.event.inputs.build_mode || 'debug' }}
+          name: ios-app-${{ steps.determine-mode.outputs.build_mode }}
           path: |
-            whi_flutter/build/ios/iphoneos/
-            whi_flutter/ios/build/ipa/
-            whi_flutter/ios/build/Runner.xcarchive
+            whi_flutter/build/ios/
+            whi_flutter/ios/build/
+          if-no-files-found: error
           retention-days: 30
 
       - name: Generate iOS Summary
