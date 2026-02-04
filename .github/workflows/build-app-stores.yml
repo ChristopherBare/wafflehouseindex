@@ -871,3 +871,31 @@ jobs:
             echo "---"
             echo "*Built with GitHub Actions* 🚀"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.version_name)
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.event.inputs.version_name) }}
+          name: Release ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.event.inputs.version_name) }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/android/app-*.aab
+            artifacts/ios/**
+            artifacts/linux/whi-linux-*.tar.gz
+          body: |
+            # 📱 Waffle House Index App Release
+
+            **Version:** ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.event.inputs.version_name) }}
+            **Build Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+
+            ## 📦 Build Artifacts
+
+            - 🤖 **Android**: Android App Bundle (.aab)
+            - 🍎 **iOS**: iOS App (requires signing)
+            - 🐧 **Linux**: Linux App Bundle (tarball)
+
+            Ready for app store submission!
