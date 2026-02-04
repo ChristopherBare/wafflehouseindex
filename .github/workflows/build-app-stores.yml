@@ -872,19 +872,29 @@ jobs:
             echo "*Built with GitHub Actions* 🚀"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Debug: Check artifact contents
+        run: |
+          echo "📂 Artifact directory contents:"
+          find artifacts -type f -name "*.aab" -o -name "*.tar.gz" | head -20
+          echo ""
+          echo "📂 Full artifacts structure:"
+          ls -lh artifacts/ 2>/dev/null || echo "No artifacts directory"
+
       - name: Prepare Release Assets
         run: |
           mkdir -p release_assets
 
-          # Copy Android AAB if it exists
+          # Copy Android AAB if it exists (look in both release and debug subdirs)
           if [ -f "artifacts/android/app-release.aab" ]; then
             cp artifacts/android/app-release.aab release_assets/
-            echo "✅ Android AAB found"
+            echo "✅ Android AAB found (release)"
           elif [ -f "artifacts/android/app-debug.aab" ]; then
             cp artifacts/android/app-debug.aab release_assets/
-            echo "✅ Android Debug AAB found"
+            echo "✅ Android AAB found (debug)"
+          elif find artifacts/android -name "*.aab" 2>/dev/null | head -1 | xargs -I {} cp {} release_assets/ 2>/dev/null; then
+            echo "✅ Android AAB found (searched)"
           else
-            echo "⚠️ No Android AAB found"
+            echo "⚠️ No Android AAB found in artifacts/android"
           fi
 
           # Copy Linux tarball if it exists
@@ -896,8 +906,9 @@ jobs:
           fi
 
           # List what we're uploading
+          echo ""
           echo "📦 Release assets to upload:"
-          ls -lh release_assets/ || echo "No assets found"
+          ls -lh release_assets/ || echo "No assets prepared"
 
       - name: Create GitHub Release
         if: success() && (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')
@@ -910,7 +921,8 @@ jobs:
           draft: false
           prerelease: ${{ github.ref_type != 'tag' }}
           files: |
-            release_assets/*
+            release_assets/app-*.aab
+            release_assets/whi-linux-*.tar.gz
           body: |
             # 📱 Waffle House Index App Release
 
