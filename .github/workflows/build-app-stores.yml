@@ -873,15 +873,15 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create GitHub Release
-        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.version_name)
+        if: success() && (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.event.inputs.version_name) }}
-          name: Release ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.event.inputs.version_name) }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}+{1}', github.event.inputs.version_name || github.run_number, github.run_attempt) }}
+          name: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || format('Build v{0}+{1}', github.event.inputs.version_name || github.run_number, github.run_attempt) }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.ref_type != 'tag' }}
           files: |
             artifacts/android/app-*.aab
             artifacts/ios/**
@@ -890,6 +890,7 @@ jobs:
             # 📱 Waffle House Index App Release
 
             **Version:** ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.event.inputs.version_name) }}
+            **Build Number:** ${{ github.run_number }}
             **Build Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')
 
             ## 📦 Build Artifacts
