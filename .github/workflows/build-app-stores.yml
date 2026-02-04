@@ -872,7 +872,7 @@ jobs:
             echo "*Built with GitHub Actions* 🚀"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Debug: Check artifact contents
+      - name: "Debug: Check artifact contents"
         run: |
           echo "📂 Artifact directory contents:"
           find artifacts -type f \( -name "*.aab" -o -name "*.tar.gz" \) | head -20
