@@ -875,7 +875,7 @@ jobs:
       - name: Debug: Check artifact contents
         run: |
           echo "📂 Artifact directory contents:"
-          find artifacts -type f -name "*.aab" -o -name "*.tar.gz" | head -20
+          find artifacts -type f \( -name "*.aab" -o -name "*.tar.gz" \) | head -20
           echo ""
           echo "📂 Full artifacts structure:"
           ls -lh artifacts/ 2>/dev/null || echo "No artifacts directory"
