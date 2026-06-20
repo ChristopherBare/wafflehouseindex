@@ -113,11 +113,10 @@ jobs:
         id: determine-mode
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            BUILD_MODE="${{ github.event.inputs.build_mode || 'debug' }}"
-          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            BUILD_MODE="release"
+            BUILD_MODE="${{ github.event.inputs.build_mode || 'release' }}"
           else
-            BUILD_MODE="debug"
+            # Always build release for Android (required for Google Play Console)
+            BUILD_MODE="release"
           fi
           echo "build_mode=$BUILD_MODE" >> "$GITHUB_OUTPUT"
 
@@ -280,7 +279,7 @@ jobs:
       - name: Upload Android App Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: android-app-bundle-${{ github.event.inputs.build_mode || 'debug' }}
+          name: android-app-bundle-${{ steps.determine-mode.outputs.build_mode }}
           path: |
             whi_flutter/build/app/outputs/bundle/*/app-*.aab
           retention-days: 30
@@ -293,24 +292,20 @@ jobs:
             echo "### 📦 Build Details"
             echo "- **Version:** ${{ steps.version.outputs.version_name }}"
             echo "- **Build Number:** ${{ steps.version.outputs.build_number }}"
-            echo "- **Build Mode:** ${{ github.event.inputs.build_mode }}"
+            echo "- **Build Mode:** Release (SIGNED for Google Play Console)"
             echo ""
-            if [ "${{ github.event.inputs.build_mode }}" == "release" ]; then
-              echo "### 📱 Google Play Console Upload"
-              echo "1. Download the AAB artifact from this workflow"
-              echo "2. Go to [Google Play Console](https://play.google.com/console)"
-              echo "3. Select your app"
-              echo "4. Navigate to **Release > Production**"
-              echo "5. Create a new release and upload the AAB file"
-              echo ""
-              echo "### ⚠️ Important"
-              echo "- Ensure the signing key matches the one registered with Google Play"
-              echo "- Test on internal testing track first before production release"
-            else
-              echo "### 🧪 Debug Build"
-              echo "This is a debug build and cannot be uploaded to Google Play."
-              echo "Use for testing purposes only."
-            fi
+            echo "### 📱 Google Play Console Upload"
+            echo "1. Download the AAB artifact from this workflow"
+            echo "2. Go to [Google Play Console](https://play.google.com/console)"
+            echo "3. Select your app"
+            echo "4. Navigate to **Release > Production** (or Internal Testing first)"
+            echo "5. Create a new release and upload the AAB file"
+            echo ""
+            echo "### ⚠️ Important"
+            echo "- This is a SIGNED release build ready for Google Play Console"
+            echo "- Ensure the signing key matches the one registered with Google Play"
+            echo "- Test on internal testing track first before production release"
+            echo "- Keep your signing key and secrets safe in GitHub"
           } >> "$GITHUB_STEP_SUMMARY"
 
   build-ios:

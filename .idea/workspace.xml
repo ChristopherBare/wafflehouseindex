@@ -16,7 +16,7 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="516" />
+    <option name="cachedIndexableFilesCount" value="850" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -73,7 +73,7 @@
     "io.flutter.reload.alreadyRun": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/christopher/IdeaProjects/wafflehouseindex/whi_flutter",
+    "last_opened_file_path": "/home/christopher/IdeaProjects/wafflehouseindex",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -134,6 +134,7 @@
       <workItem from="1769731133633" duration="112000" />
       <workItem from="1769893412099" duration="677000" />
       <workItem from="1769894706246" duration="1237000" />
+      <workItem from="1769984278345" duration="522000" />
     </task>
     <task id="LOCAL-00001" summary="awedrf">
       <option name="closed" value="true" />

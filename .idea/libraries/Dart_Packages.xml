@@ -180,7 +180,7 @@
         <entry key="geolocator_android">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_android-5.0.2/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_android-4.6.2/lib" />
             </list>
           </value>
         </entry>
@@ -650,7 +650,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_map-8.2.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geoclue-0.1.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator-14.0.2/lib" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_android-5.0.2/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_android-4.6.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.13/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_linux-0.2.4/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_platform_interface-4.2.6/lib" />
