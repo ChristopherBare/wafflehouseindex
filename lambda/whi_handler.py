@@ -64,20 +64,19 @@ def geocode_zip(zip_code: str) -> Tuple[float, float]:
     return lat, lon
 
 
-def fetch_locations_from_source() -> List[Dict]:
-    """Fetch all Waffle House locations from the Where2GetIt/SOCI locator API."""
+def _fetch_region(lat: float, lon: float, radius: int) -> List[Dict]:
+    """Fetch locations for a single region and return only the fields we need."""
     API_URL = "https://locations.wafflehouse.com/rest/locatorsearch"
     APPKEY = "67D5833A-80B5-4F9E-9C2B-9E7BAA634C27"
 
-    # Center of the continental US with a radius large enough to cover all locations
     payload = json.dumps({
         "request": {
             "appkey": APPKEY,
             "formdata": {
                 "dataview": "store_default",
-                "limit": 5000,
-                "geolocs": {"geoloc": [{"latitude": "39.5", "longitude": "-98.35"}]},
-                "searchradius": "5000",
+                "limit": 500,
+                "geolocs": {"geoloc": [{"latitude": str(lat), "longitude": str(lon)}]},
+                "searchradius": str(radius),
             }
         }
     }).encode()
@@ -95,48 +94,73 @@ def fetch_locations_from_source() -> List[Dict]:
 
     with urllib.request.urlopen(req, timeout=30) as resp:
         if resp.status != 200:
-            raise RuntimeError(f"Locator API returned status {resp.status}")
+            raise RuntimeError(f"Locator API returned {resp.status}")
         data = json.loads(resp.read().decode())
 
-    collection = data.get("response", {}).get("collection", [])
-    print(f"Fetched {len(collection)} locations from API")
-
     out = []
-    for loc in collection:
+    for loc in data.get("response", {}).get("collection", []):
         id_ = str(loc.get("clientkey") or loc.get("uid") or "").strip()
         if not id_:
             continue
-
         try:
-            lat = float(loc["latitude"])
-            lon = float(loc["longitude"])
+            lat_ = float(loc["latitude"])
+            lon_ = float(loc["longitude"])
         except (KeyError, TypeError, ValueError):
             continue
 
-        name = loc.get("name") or None
-        city = (loc.get("city") or "").title() or None
-        state = loc.get("state") or None
-
-        # opening_status lives inside the nested location object
         location_obj = loc.get("location") or {}
         opening_status = ""
         if isinstance(location_obj, dict):
             opening_status = (location_obj.get("opening_status") or "").lower()
-
         status = "Closed" if opening_status in ("temporarily_closed", "permanently_closed", "closed") else "Open"
 
         out.append({
             "id": id_,
-            "name": name,
-            "city": city,
-            "state": state,
+            "name": loc.get("name") or None,
+            "city": (loc.get("city") or "").title() or None,
+            "state": loc.get("state") or None,
             "status": status,
-            "lat": lat,
-            "lon": lon,
+            "lat": lat_,
+            "lon": lon_,
         })
-
-    print(f"Parsed {len(out)} valid locations")
     return out
+
+
+def fetch_locations_from_source() -> List[Dict]:
+    """Fetch all Waffle House locations by querying several regional centers."""
+    # Waffle House is concentrated in the Southeast US.
+    # We use overlapping regional queries (each ≤500 results) to cover all locations.
+    # Radius 600 miles from each center keeps response sizes manageable.
+    regions = [
+        (33.75,  -84.39, 300),   # Atlanta core
+        (32.08,  -81.09, 300),   # Savannah/coastal SE
+        (27.95,  -82.46, 300),   # Tampa/Florida west
+        (25.76,  -80.19, 300),   # Miami/Florida south
+        (30.33,  -81.66, 300),   # Jacksonville/Florida north
+        (35.23,  -80.84, 300),   # Charlotte
+        (35.78,  -78.64, 300),   # Raleigh
+        (36.17,  -86.78, 300),   # Nashville
+        (35.15,  -90.05, 300),   # Memphis
+        (33.52,  -86.81, 300),   # Birmingham
+        (32.30,  -90.18, 300),   # Jackson MS
+        (29.95,  -90.07, 300),   # New Orleans
+        (29.76,  -95.37, 300),   # Houston
+        (32.78,  -96.80, 300),   # Dallas
+        (39.50,  -98.35, 600),   # Central US / Midwest
+        (38.90,  -77.03, 300),   # DC/Virginia/Maryland
+        (39.96,  -82.99, 300),   # Columbus OH
+    ]
+
+    seen: dict = {}
+    for lat, lon, radius in regions:
+        locs = _fetch_region(lat, lon, radius)
+        print(f"Region ({lat},{lon}) r={radius}: {len(locs)} locations")
+        for loc in locs:
+            seen[loc["id"]] = loc  # deduplicate by store ID
+
+    result = list(seen.values())
+    print(f"Fetched {len(result)} unique locations total")
+    return result
 
 
 def _compress(data: list) -> str:
