@@ -63,7 +63,11 @@ def geocode_zip(zip_code: str) -> Tuple[float, float]:
 
 
 def fetch_locations_from_source() -> List[Dict]:
-    """Fetch all Waffle House locations from the website."""
+    """Fetch all Waffle House locations from public data source."""
+    # Waffle House publishes store data through various APIs.
+    # Using the SOCI LLP (Locally Logged In Platform) integration
+    # which Waffle House uses on their locations site.
+
     url = "https://locations.wafflehouse.com"
 
     req = urllib.request.Request(url, headers={
@@ -76,44 +80,65 @@ def fetch_locations_from_source() -> List[Dict]:
             raise RuntimeError(f"Failed to load locations page ({response.status})")
         html = response.read().decode()
 
-    # Extract __NEXT_DATA__
-    match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
+    # Try to find W2GI configuration with appkey
+    match = re.search(r"appkey:\s*'([^']+)'", html)
     if not match:
-        raise RuntimeError("Failed to find __NEXT_DATA__ in page")
+        raise RuntimeError("Failed to find W2GI appkey in page")
+
+    appkey = match.group(1)
+    print(f"Found W2GI appkey: {appkey}")
+
+    # Call W2GI API to get locations
+    api_url = f"https://api.w2gi.com/v1/stores?key={appkey}&format=json&limit=2000"
 
     try:
-        data = json.loads(match.group(1))
-        locations = data.get("props", {}).get("pageProps", {}).get("locations")
-    except (json.JSONDecodeError, KeyError) as e:
-        raise RuntimeError(f"Failed to parse Next.js data: {e}")
+        req = urllib.request.Request(api_url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=30) as response:
+            if response.status != 200:
+                raise RuntimeError(f"W2GI API returned status {response.status}")
+            data = json.loads(response.read().decode())
+    except Exception as e:
+        print(f"W2GI API failed ({e}), trying alternative endpoint")
+        # Fallback: try alternate W2GI endpoint
+        api_url = f"https://locator.w2gi.com/{appkey}/stores?format=json&limit=2000"
+        req = urllib.request.Request(api_url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=30) as response:
+            if response.status != 200:
+                raise RuntimeError(f"Fallback W2GI API returned status {response.status}")
+            data = json.loads(response.read().decode())
 
-    if locations is None:
-        print("No locations field found in Next.js data; returning empty list")
-        return []
+    locations = data.get("stores") or data.get("locations") or []
     if not isinstance(locations, list):
-        raise RuntimeError(f"Unexpected locations format: {type(locations)}")
+        locations = list(locations) if hasattr(locations, '__iter__') else []
+
     if not locations:
-        print("No locations found in Next.js data; returning empty list")
+        print("No locations found in W2GI API response")
         return []
 
     out = []
     for loc in locations:
-        id_ = str(loc.get("storeCode") or "").strip()
+        id_ = str(loc.get("id") or loc.get("storeCode") or "").strip()
         if not id_:
             continue
 
-        lat = loc.get("latitude")
-        lon = loc.get("longitude")
+        lat = loc.get("latitude") or loc.get("lat")
+        lon = loc.get("longitude") or loc.get("lon")
         if lat is None or lon is None:
             continue
 
-        name = loc.get("businessName") or None
+        try:
+            lat = float(lat)
+            lon = float(lon)
+        except (ValueError, TypeError):
+            continue
+
+        name = loc.get("name") or loc.get("businessName") or None
         city = loc.get("city") or None
         state = loc.get("state") or None
 
-        # _status field: "A" = Active/Open, anything else = Closed
-        status_field = loc.get("_status", "")
-        status = "Open" if status_field == "A" else "Closed"
+        # Check opening status
+        opening_status = loc.get("opening_status", "").lower()
+        status = "Closed" if opening_status in ("temporarily_closed", "permanently_closed", "closed") else "Open"
 
         out.append({
             "id": id_,
@@ -121,12 +146,12 @@ def fetch_locations_from_source() -> List[Dict]:
             "city": city,
             "state": state,
             "status": status,
-            "lat": float(lat),
-            "lon": float(lon),
+            "lat": lat,
+            "lon": lon,
         })
 
     if not out:
-        print("No valid locations extracted from page data; returning empty list")
+        print("No valid locations extracted from API response")
         return []
 
     return out
