@@ -7,6 +7,8 @@ import json
 import math
 import time
 import os
+import gzip
+import base64
 import boto3
 from typing import List, Dict, Any, Tuple
 from datetime import datetime, timedelta
@@ -137,31 +139,42 @@ def fetch_locations_from_source() -> List[Dict]:
     return out
 
 
+def _compress(data: list) -> str:
+    raw = json.dumps(data).encode()
+    compressed = gzip.compress(raw, compresslevel=6)
+    return base64.b64encode(compressed).decode()
+
+
+def _decompress(blob: str) -> list:
+    compressed = base64.b64decode(blob)
+    raw = gzip.decompress(compressed)
+    return json.loads(raw)
+
+
 def get_locations_from_cache() -> List[Dict]:
     """Get locations from DynamoDB cache or fetch fresh data."""
     try:
-        # Try to get from cache
         response = table.get_item(Key={'id': 'locations_cache'})
-
         if 'Item' in response:
             item = response['Item']
-            # Check if cache is still valid
             if item.get('ttl', 0) > int(time.time()):
                 print("Using cached location data")
+                blob = item.get('locations_gz')
+                if blob:
+                    return _decompress(blob)
                 return item.get('locations', [])
-
         print("Cache miss or expired, fetching fresh data")
     except Exception as e:
         print(f"Error reading from cache: {e}")
 
-    # Fetch fresh data
     locations = fetch_locations_from_source()
 
-    # Store in cache with TTL
     try:
+        blob = _compress(locations)
+        print(f"Compressed {len(locations)} locations to {len(blob)} bytes")
         table.put_item(Item={
             'id': 'locations_cache',
-            'locations': locations,
+            'locations_gz': blob,
             'ttl': int(time.time()) + CACHE_TTL,
             'updated_at': datetime.utcnow().isoformat()
         })
