@@ -94,8 +94,8 @@ resource "aws_lambda_function" "whi_api" {
   handler         = "whi_handler.lambda_handler"
   source_code_hash = filebase64sha256("../lambda/whi_handler.zip")
   runtime         = "python3.11"
-  timeout         = 30  # Allow time for web scraping if cache miss
-  memory_size     = 256  # Enough for processing location data
+  timeout         = 60  # Allow time for multi-region API fetch on cache miss
+  memory_size     = 512  # Needed to process ~2000 location API responses
 
   environment {
     variables = {
