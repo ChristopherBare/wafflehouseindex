@@ -63,81 +63,64 @@ def geocode_zip(zip_code: str) -> Tuple[float, float]:
 
 
 def fetch_locations_from_source() -> List[Dict]:
-    """Fetch all Waffle House locations from public data source."""
-    # Waffle House publishes store data through various APIs.
-    # Using the SOCI LLP (Locally Logged In Platform) integration
-    # which Waffle House uses on their locations site.
+    """Fetch all Waffle House locations from the Where2GetIt/SOCI locator API."""
+    API_URL = "https://locations.wafflehouse.com/rest/locatorsearch"
+    APPKEY = "67D5833A-80B5-4F9E-9C2B-9E7BAA634C27"
 
-    url = "https://locations.wafflehouse.com"
+    # Center of the continental US with a radius large enough to cover all locations
+    payload = json.dumps({
+        "request": {
+            "appkey": APPKEY,
+            "formdata": {
+                "dataview": "store_default",
+                "limit": 5000,
+                "geolocs": {"geoloc": [{"latitude": "39.5", "longitude": "-98.35"}]},
+                "searchradius": "5000",
+            }
+        }
+    }).encode()
 
-    req = urllib.request.Request(url, headers={
-        "User-Agent": UA,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    })
+    req = urllib.request.Request(
+        API_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": UA,
+            "Referer": "https://locations.wafflehouse.com/",
+        },
+        method="POST",
+    )
 
-    with urllib.request.urlopen(req, timeout=30) as response:
-        if response.status != 200:
-            raise RuntimeError(f"Failed to load locations page ({response.status})")
-        html = response.read().decode()
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        if resp.status != 200:
+            raise RuntimeError(f"Locator API returned status {resp.status}")
+        data = json.loads(resp.read().decode())
 
-    # Try to find W2GI configuration with appkey
-    match = re.search(r"appkey:\s*'([^']+)'", html)
-    if not match:
-        raise RuntimeError("Failed to find W2GI appkey in page")
-
-    appkey = match.group(1)
-    print(f"Found W2GI appkey: {appkey}")
-
-    # Call W2GI API to get locations
-    api_url = f"https://api.w2gi.com/v1/stores?key={appkey}&format=json&limit=2000"
-
-    try:
-        req = urllib.request.Request(api_url, headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=30) as response:
-            if response.status != 200:
-                raise RuntimeError(f"W2GI API returned status {response.status}")
-            data = json.loads(response.read().decode())
-    except Exception as e:
-        print(f"W2GI API failed ({e}), trying alternative endpoint")
-        # Fallback: try alternate W2GI endpoint
-        api_url = f"https://locator.w2gi.com/{appkey}/stores?format=json&limit=2000"
-        req = urllib.request.Request(api_url, headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=30) as response:
-            if response.status != 200:
-                raise RuntimeError(f"Fallback W2GI API returned status {response.status}")
-            data = json.loads(response.read().decode())
-
-    locations = data.get("stores") or data.get("locations") or []
-    if not isinstance(locations, list):
-        locations = list(locations) if hasattr(locations, '__iter__') else []
-
-    if not locations:
-        print("No locations found in W2GI API response")
-        return []
+    collection = data.get("response", {}).get("collection", [])
+    print(f"Fetched {len(collection)} locations from API")
 
     out = []
-    for loc in locations:
-        id_ = str(loc.get("id") or loc.get("storeCode") or "").strip()
+    for loc in collection:
+        id_ = str(loc.get("clientkey") or loc.get("uid") or "").strip()
         if not id_:
             continue
 
-        lat = loc.get("latitude") or loc.get("lat")
-        lon = loc.get("longitude") or loc.get("lon")
-        if lat is None or lon is None:
-            continue
-
         try:
-            lat = float(lat)
-            lon = float(lon)
-        except (ValueError, TypeError):
+            lat = float(loc["latitude"])
+            lon = float(loc["longitude"])
+        except (KeyError, TypeError, ValueError):
             continue
 
-        name = loc.get("name") or loc.get("businessName") or None
-        city = loc.get("city") or None
+        name = loc.get("name") or None
+        city = (loc.get("city") or "").title() or None
         state = loc.get("state") or None
 
-        # Check opening status
-        opening_status = loc.get("opening_status", "").lower()
+        # opening_status lives inside the nested location object
+        location_obj = loc.get("location") or {}
+        opening_status = ""
+        if isinstance(location_obj, dict):
+            opening_status = (location_obj.get("opening_status") or "").lower()
+
         status = "Closed" if opening_status in ("temporarily_closed", "permanently_closed", "closed") else "Open"
 
         out.append({
@@ -150,10 +133,7 @@ def fetch_locations_from_source() -> List[Dict]:
             "lon": lon,
         })
 
-    if not out:
-        print("No valid locations extracted from API response")
-        return []
-
+    print(f"Parsed {len(out)} valid locations")
     return out
 
 
