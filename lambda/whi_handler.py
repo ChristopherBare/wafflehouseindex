@@ -139,63 +139,64 @@ def fetch_all_from_source() -> List[Dict]:
 def sync_to_db(locations: List[Dict]):
     """Sync locations to DynamoDB using batch writer."""
     print(f"Syncing {len(locations)} locations to DynamoDB...")
-    with table.batch_writer() as batch:
-        for loc in locations:
-            # Convert floats to Decimal for DynamoDB
-            item = json.loads(json.dumps(loc), parse_float=Decimal)
-            batch.put_item(Item=item)
-    print("Sync complete.")
+    try:
+        with table.batch_writer() as batch:
+            for loc in locations:
+                # Convert floats to Decimal for DynamoDB
+                item = json.loads(json.dumps(loc), parse_float=Decimal)
+                batch.put_item(Item=item)
+        print("Sync complete.")
+    except Exception as e:
+        print(f"Error during batch sync: {e}")
 
 def get_all_from_db() -> List[Dict]:
     """Scan DynamoDB to retrieve all stored locations."""
     print("Scanning DynamoDB for all locations...")
-    response = table.scan()
-    items = response.get('Items', [])
-    while 'LastEvaluatedKey' in response:
-        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        items.extend(response.get('Items', []))
+    try:
+        response = table.scan()
+        items = response.get('Items', [])
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            items.extend(response.get('Items', []))
 
-    # Filter out the old 'locations_cache' item if it exists
-    clean_items = [i for i in items if i['id'] != 'locations_cache']
-    print(f"Found {len(clean_items)} locations in DB.")
-    return clean_items
+        # Filter out the old 'locations_cache' item if it exists
+        clean_items = [i for i in items if i.get('id') != 'locations_cache']
+        print(f"Found {len(clean_items)} locations in DB.")
+        return clean_items
+    except Exception as e:
+        print(f"Error scanning DB: {e}")
+        return []
 
 def get_locations_with_failsafe() -> Tuple[List[Dict], str]:
     """Get locations from source, or fallback to DB if source fails."""
-    # Logic:
-    # 1. Try to read from DB first? No, we want live data if possible.
-    # 2. Try to fetch live. If it works, sync to DB.
-    # 3. If live fails, read everything from DB.
+    # PERFORMANCE OPTIMIZATION:
+    # User requests should always be served from DynamoDB to avoid
+    # API Gateway/CloudFront timeouts (29s limit).
+    # The background CRON job (EventBridge) handles the expensive scraper updates.
 
-    # We use a small local cache within the Lambda execution to avoid re-fetching
-    # in the same request if compute_index is called multiple times (though it's not currently).
+    db_items = get_all_from_db()
 
-    try:
-        # Check if we have very recent data in DB first to avoid aggressive scraping?
-        # For now, let's stick to the plan: fetch live, sync, fallback.
-
-        locations = fetch_all_from_source()
-        if not locations or len(locations) < 100: # sanity check
-            raise RuntimeError(f"Scraper returned suspiciously low results: {len(locations)}")
-
-        sync_to_db(locations)
-        return locations, "live"
-    except Exception as e:
-        print(f"Live fetch failed: {e}. Falling back to persistent storage...")
-        db_items = get_all_from_db()
-
-        if not db_items:
-            print("CRITICAL: No fallback data found in DynamoDB!")
-            return [], "error"
-
-        # Convert Decimal back to float/int for JSON serialization
+    # If DB has data, return it immediately (even if slightly stale)
+    if db_items and len(db_items) > 100:
+        print("Serving from persistent DynamoDB storage.")
         def decimal_default(obj):
             if isinstance(obj, Decimal):
                 return float(obj) if obj % 1 > 0 else int(obj)
             raise TypeError
+        return json.loads(json.dumps(db_items, default=decimal_default)), "database"
 
-        clean_locations = json.loads(json.dumps(db_items, default=decimal_default))
-        return clean_locations, "database_fallback"
+    # Only attempt live fetch if DB is empty (Cold Start / First run)
+    print("Database is empty, attempting emergency live fetch...")
+    try:
+        locations = fetch_all_from_source()
+        if not locations or len(locations) < 100:
+            raise RuntimeError(f"Scraper returned suspiciously low results: {len(locations)}")
+
+        sync_to_db(locations)
+        return locations, "live_emergency"
+    except Exception as e:
+        print(f"Emergency live fetch failed: {e}.")
+        return [], "error"
 
 def compute_index_for_location(lat: float, lon: float, radius_miles: float = 50.0) -> Dict[str, Any]:
     """Compute the Waffle House Index for a given location."""
@@ -303,7 +304,7 @@ def lambda_handler(event, context):
                 'body': json.dumps({
                     "status": "healthy",
                     "service": "Waffle House Index API",
-                    "version": "2.1.0",
+                    "version": "2.1.1",
                     "runtime": "AWS Lambda",
                     "persistent_storage": "enabled"
                 })
