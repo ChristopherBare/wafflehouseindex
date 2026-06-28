@@ -135,10 +135,14 @@ class _WHIHomePageState extends State<WHIHomePage> {
         requestBadgePermission: true,
         requestSoundPermission: true,
       );
+      const linuxSettings = LinuxInitializationSettings(
+        defaultActionName: 'Open',
+      );
       const initSettings = InitializationSettings(
         android: androidSettings,
         iOS: darwinSettings,
         macOS: darwinSettings,
+        linux: linuxSettings,
       );
 
       await _notificationsPlugin.initialize(initSettings);

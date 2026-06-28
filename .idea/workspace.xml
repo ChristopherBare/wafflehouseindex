@@ -4,8 +4,21 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="Fixing permissions in lambda.">
+    <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="Adjust mobile view for webapp and fix lambda coordinate rounding in db.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/.metadata" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/.metadata" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/linux/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/linux/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/flutter/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/linux/flutter/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/linux/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/main.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/my_application.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/my_application.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/runner/my_application.cc" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/linux/runner/my_application.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/linux/runner/my_application.h" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/linux/runner/my_application.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/windows/flutter/generated_plugins.cmake" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -253,7 +266,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782688284226</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Adjust mobile view for webapp and fix lambda coordinate rounding in db.">
+      <option name="closed" value="true" />
+      <created>1782689500836</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1782689500836</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -273,7 +294,8 @@
     <MESSAGE value="Updating interface for web." />
     <MESSAGE value="Update lambda functionality." />
     <MESSAGE value="Fixing permissions in lambda." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixing permissions in lambda." />
+    <MESSAGE value="Adjust mobile view for webapp and fix lambda coordinate rounding in db." />
+    <option name="LAST_COMMIT_MESSAGE" value="Adjust mobile view for webapp and fix lambda coordinate rounding in db." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

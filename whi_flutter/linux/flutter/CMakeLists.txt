@@ -1,59 +1,88 @@
+# This file controls Flutter-level build steps. It should not be edited.
 cmake_minimum_required(VERSION 3.10)
-
-# This file is managed by Flutter tooling and references ephemeral artifacts
-# that are generated during the build. It is safe to commit this file, but
-# do not edit paths below unless you know what you're doing.
 
 set(EPHEMERAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ephemeral")
 
-if(NOT EXISTS "${EPHEMERAL_DIR}/generated_config.cmake")
-  message(FATAL_ERROR
-    "Generated build files for Flutter Linux are missing.\n"
-    "Run 'flutter pub get' then build for linux (e.g., 'flutter run -d linux').")
-endif()
+# Configuration provided via flutter tool.
+include(${EPHEMERAL_DIR}/generated_config.cmake)
 
-include("${EPHEMERAL_DIR}/generated_config.cmake")
+# TODO: Move the rest of this into files in ephemeral. See
+# https://github.com/flutter/flutter/issues/57146.
 
-set(FLUTTER_LIBRARY "${EPHEMERAL_DIR}/libflutter_linux_gtk.so")
-set(FLUTTER_ICU_DATA_FILE "${EPHEMERAL_DIR}/icudtl.dat")
-set(FLUTTER_LIBRARY_HEADERS "${EPHEMERAL_DIR}")
-
-# Define a helper to apply standard settings to targets (matches Flutter template behavior).
-function(apply_standard_settings TARGET)
-  # Determine linkage scope depending on target type
-  get_target_property(_type ${TARGET} TYPE)
-  if(_type STREQUAL "INTERFACE_LIBRARY")
-    set(_scope INTERFACE)
-  else()
-    set(_scope PRIVATE)
-  endif()
-
-  # C++ standard and warnings
-  target_compile_features(${TARGET} ${_scope} cxx_std_14)
-  if(MSVC)
-    target_compile_options(${TARGET} ${_scope} /W4)
-  else()
-    target_compile_options(${TARGET} ${_scope} -Wall -Wextra -Wpedantic)
-  endif()
+# Serves the same purpose as list(TRANSFORM ... PREPEND ...),
+# which isn't available in 3.10.
+function(list_prepend LIST_NAME PREFIX)
+    set(NEW_LIST "")
+    foreach(element ${${LIST_NAME}})
+        list(APPEND NEW_LIST "${PREFIX}${element}")
+    endforeach(element)
+    set(${LIST_NAME} "${NEW_LIST}" PARENT_SCOPE)
 endfunction()
 
+# === Flutter Library ===
+# System-level dependencies.
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
+pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
+
+set(FLUTTER_LIBRARY "${EPHEMERAL_DIR}/libflutter_linux_gtk.so")
+
+# Published to parent scope for install step.
+set(FLUTTER_LIBRARY ${FLUTTER_LIBRARY} PARENT_SCOPE)
+set(FLUTTER_ICU_DATA_FILE "${EPHEMERAL_DIR}/icudtl.dat" PARENT_SCOPE)
+set(PROJECT_BUILD_DIR "${PROJECT_DIR}/build/" PARENT_SCOPE)
+set(AOT_LIBRARY "${PROJECT_DIR}/build/lib/libapp.so" PARENT_SCOPE)
+
+list(APPEND FLUTTER_LIBRARY_HEADERS
+  "fl_basic_message_channel.h"
+  "fl_binary_codec.h"
+  "fl_binary_messenger.h"
+  "fl_dart_project.h"
+  "fl_engine.h"
+  "fl_json_message_codec.h"
+  "fl_json_method_codec.h"
+  "fl_message_codec.h"
+  "fl_method_call.h"
+  "fl_method_channel.h"
+  "fl_method_codec.h"
+  "fl_method_response.h"
+  "fl_plugin_registrar.h"
+  "fl_plugin_registry.h"
+  "fl_standard_message_codec.h"
+  "fl_standard_method_codec.h"
+  "fl_string_codec.h"
+  "fl_value.h"
+  "fl_view.h"
+  "flutter_linux.h"
+)
+list_prepend(FLUTTER_LIBRARY_HEADERS "${EPHEMERAL_DIR}/flutter_linux/")
 add_library(flutter INTERFACE)
 target_include_directories(flutter INTERFACE
-  "${FLUTTER_LIBRARY_HEADERS}"
+  "${EPHEMERAL_DIR}"
 )
+target_link_libraries(flutter INTERFACE "${FLUTTER_LIBRARY}")
 target_link_libraries(flutter INTERFACE
-  "${FLUTTER_LIBRARY}"
-  dl
-  pthread
+  PkgConfig::GTK
+  PkgConfig::GLIB
+  PkgConfig::GIO
 )
+add_dependencies(flutter flutter_assemble)
 
-# Provide a nice default set of compiler flags for Flutter targets.
-apply_standard_settings(flutter)
-
-# Define the plugin registrant (generated).
-set(PLUGIN_REGISTRANT "${CMAKE_CURRENT_SOURCE_DIR}/generated_plugin_registrant.cc")
-
-# Include generated plugins list if present.
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated_plugins.cmake")
-  include("${CMAKE_CURRENT_SOURCE_DIR}/generated_plugins.cmake")
-endif()
+# === Flutter tool backend ===
+# _phony_ is a non-existent file to force this command to run every time,
+# since currently there's no way to get a full input/output list from the
+# flutter tool.
+add_custom_command(
+  OUTPUT ${FLUTTER_LIBRARY} ${FLUTTER_LIBRARY_HEADERS}
+    ${CMAKE_CURRENT_BINARY_DIR}/_phony_
+  COMMAND ${CMAKE_COMMAND} -E env
+    ${FLUTTER_TOOL_ENVIRONMENT}
+    "${FLUTTER_ROOT}/packages/flutter_tools/bin/tool_backend.sh"
+      ${FLUTTER_TARGET_PLATFORM} ${CMAKE_BUILD_TYPE}
+  VERBATIM
+)
+add_custom_target(flutter_assemble DEPENDS
+  "${FLUTTER_LIBRARY}"
+  ${FLUTTER_LIBRARY_HEADERS}
+)
