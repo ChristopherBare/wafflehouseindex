@@ -114,11 +114,18 @@ def _fetch_region(lat: float, lon: float, radius: int) -> List[Dict]:
             opening_status = (location_obj.get("opening_status") or "").lower()
         status = "Closed" if opening_status in ("temporarily_closed", "permanently_closed", "closed") else "Open"
 
+        address1 = (loc.get("address1") or "").strip()
+        address2 = (loc.get("address2") or "").strip()
+        full_address = f"{address1} {address2}".strip()
+
         out.append({
             "id": id_,
             "name": loc.get("name") or None,
+            "address": full_address or None,
             "city": (loc.get("city") or "").title() or None,
             "state": loc.get("state") or None,
+            "zip": loc.get("postalcode") or None,
+            "phone": loc.get("phone") or None,
             "status": status,
             "lat": lat_,
             "lon": lon_,

@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
 
@@ -438,8 +439,11 @@ class _WHIHomePageState extends State<WHIHomePage> {
       details.add(LocationDetail(
         id: loc['id']?.toString() ?? '',
         name: loc['name']?.toString(),
+        address: loc['address']?.toString(),
         city: loc['city']?.toString(),
         state: loc['state']?.toString(),
+        zip: loc['zip']?.toString(),
+        phone: loc['phone']?.toString(),
         status: loc['status']?.toString() ?? 'Closed',
         lat: (loc['lat'] is num) ? (loc['lat'] as num).toDouble() : 0.0,
         lon: (loc['lon'] is num) ? (loc['lon'] as num).toDouble() : 0.0,
@@ -639,6 +643,15 @@ class _WHIHomePageState extends State<WHIHomePage> {
     });
   }
 
+  void _handleLocationSelected(LocationDetail location) {
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LocationDetailPage(location: location),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -667,10 +680,11 @@ class _WHIHomePageState extends State<WHIHomePage> {
           _maybeSendAlert(result);
 
           if (_isMinimalWeb) {
-            return MapTab(
+            return MinimalWebLayout(
               result: result,
               radius: _radius,
               isLoading: _isLoading,
+              onRadiusChanged: _handleRadiusChanged,
             );
           }
 
@@ -683,6 +697,7 @@ class _WHIHomePageState extends State<WHIHomePage> {
                 isLoading: _isLoading,
                 onRadiusChanged: _handleRadiusChanged,
                 onRefresh: _refresh,
+                onLocationSelected: _handleLocationSelected,
               ),
               MapTab(
                 result: result,
@@ -694,6 +709,7 @@ class _WHIHomePageState extends State<WHIHomePage> {
                 radius: _radius,
                 onSearch: _loadByZip,
                 onUpgradeRequested: _goToUpgrade,
+                onLocationSelected: _handleLocationSelected,
               ),
               MenuTab(
                 isPremium: _isPremium,
@@ -751,6 +767,7 @@ class HomeTab extends StatelessWidget {
   final bool isLoading;
   final ValueChanged<double> onRadiusChanged;
   final Future<void> Function() onRefresh;
+  final ValueChanged<LocationDetail> onLocationSelected;
 
   const HomeTab({
     super.key,
@@ -759,6 +776,7 @@ class HomeTab extends StatelessWidget {
     required this.isLoading,
     required this.onRadiusChanged,
     required this.onRefresh,
+    required this.onLocationSelected,
   });
 
   @override
@@ -858,7 +876,7 @@ class HomeTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          ...buildLocationCards(result.locations),
+          ...buildLocationCards(result.locations, onTap: onLocationSelected),
           const SizedBox(height: 24),
           const Text(
             'Note: The Waffle House Index indicates disaster severity. Below 80% suggests significant regional impact.',
@@ -874,12 +892,14 @@ class MapTab extends StatelessWidget {
   final WHIResult result;
   final double radius;
   final bool isLoading;
+  final bool showSummary;
 
   const MapTab({
     super.key,
     required this.result,
     required this.radius,
     required this.isLoading,
+    this.showSummary = true,
   });
 
   @override
@@ -905,7 +925,7 @@ class MapTab extends StatelessWidget {
         .toList();
 
     final bottomOffset =
-        MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 12;
+        MediaQuery.of(context).padding.bottom + (_isMinimalWeb ? 0 : kBottomNavigationBarHeight) + 12;
 
     return Stack(
       children: [
@@ -931,18 +951,319 @@ class MapTab extends StatelessWidget {
           const Center(
             child: Text('No locations found in this radius'),
           ),
-        Positioned(
-          left: 12,
-          right: 12,
-          bottom: bottomOffset,
-          child: MapSummaryBar(
-            status: status,
-            result: result,
-            radius: radius,
-            isLoading: isLoading,
+        if (showSummary)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: bottomOffset,
+            child: MapSummaryBar(
+              status: status,
+              result: result,
+              radius: radius,
+              isLoading: isLoading,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class MinimalWebLayout extends StatefulWidget {
+  final WHIResult result;
+  final double radius;
+  final bool isLoading;
+  final ValueChanged<double> onRadiusChanged;
+
+  const MinimalWebLayout({
+    super.key,
+    required this.result,
+    required this.radius,
+    required this.isLoading,
+    required this.onRadiusChanged,
+  });
+
+  @override
+  State<MinimalWebLayout> createState() => _MinimalWebLayoutState();
+}
+
+class _MinimalWebLayoutState extends State<MinimalWebLayout> {
+  LocationDetail? _selectedLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = statusInfoFor(widget.result.openPct);
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 450,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: StatusSummaryCard(
+                    status: status, openPct: widget.result.openPct),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Search Radius',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Text(
+                          '${widget.radius.toInt()} miles',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: widget.radius,
+                      min: 10,
+                      max: 500,
+                      divisions: 49,
+                      label: '${widget.radius.toInt()} mi',
+                      onChanged: widget.isLoading ? null : widget.onRadiusChanged,
+                    ),
+                    if (widget.isLoading) const LinearProgressIndicator(),
+                    const Divider(),
+                    Text(
+                      'Nearby stores: ${widget.result.locations.length}',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  children: [
+                    ...buildLocationCards(widget.result.locations, onTap: (loc) {
+                      setState(() {
+                        _selectedLocation = loc;
+                      });
+                    }),
+                    const SizedBox(height: 24),
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Note: The Waffle House Index indicates disaster severity. Below 80% suggests significant regional impact.',
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const VerticalDivider(width: 1),
+        Expanded(
+          child: Stack(
+            children: [
+              MapTab(
+                result: widget.result,
+                radius: widget.radius,
+                isLoading: widget.isLoading,
+                showSummary: false,
+              ),
+              if (_selectedLocation != null)
+                Positioned(
+                  left: 20,
+                  top: 20,
+                  child: LocationDetailCard(
+                    location: _selectedLocation!,
+                    onClose: () {
+                      setState(() {
+                        _selectedLocation = null;
+                      });
+                    },
+                  ),
+                ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class LocationDetailCard extends StatelessWidget {
+  final LocationDetail location;
+  final VoidCallback onClose;
+
+  const LocationDetailCard({
+    super.key,
+    required this.location,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 8,
+      child: Container(
+        width: 350,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    location.name ?? 'Waffle House #${location.id}',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: onClose,
+                ),
+              ],
+            ),
+            const Divider(),
+            _InfoRow(icon: Icons.location_on, text: location.address ?? 'No address provided'),
+            _InfoRow(icon: Icons.location_city, text: '${location.city ?? ''}, ${location.state ?? ''} ${location.zip ?? ''}'),
+            _InfoRow(icon: Icons.phone, text: location.phone ?? 'No phone number'),
+            _InfoRow(
+              icon: Icons.access_time,
+              text: location.status == 'Open' ? 'Usually Open 24/7' : 'Currently Closed',
+              color: location.status == 'Open' ? Colors.green : Colors.red,
+            ),
+            if (location.distanceMiles != null)
+              _InfoRow(icon: Icons.directions_car, text: '${location.distanceMiles!.toStringAsFixed(1)} miles away'),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final query = Uri.encodeComponent(
+                    '${location.name ?? 'Waffle House'}, ${location.address ?? ''}, ${location.city ?? ''}, ${location.state ?? ''}',
+                  );
+                  final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+                  launchUrl(url);
+                },
+                icon: const Icon(Icons.map),
+                label: const Text('Get Directions'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LocationDetailPage extends StatelessWidget {
+  final LocationDetail location;
+
+  const LocationDetailPage({super.key, required this.location});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(location.name ?? 'Store Details'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        location.status == 'Open' ? Icons.check_circle : Icons.cancel,
+                        color: location.status == 'Open' ? Colors.green : Colors.red,
+                        size: 32,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        location.status,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: location.status == 'Open' ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    location.name ?? 'Waffle House #${location.id}',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  _InfoRow(icon: Icons.location_on, text: location.address ?? 'No address provided'),
+                  _InfoRow(icon: Icons.location_city, text: '${location.city ?? ''}, ${location.state ?? ''} ${location.zip ?? ''}'),
+                  _InfoRow(icon: Icons.phone, text: location.phone ?? 'No phone number'),
+                  _InfoRow(icon: Icons.access_time, text: 'Hours: 24/7 (subject to conditions)'),
+                  if (location.distanceMiles != null)
+                    _InfoRow(icon: Icons.directions_car, text: 'Distance: ${location.distanceMiles!.toStringAsFixed(1)} miles'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              final query = Uri.encodeComponent(
+                '${location.name ?? 'Waffle House'}, ${location.address ?? ''}, ${location.city ?? ''}, ${location.state ?? ''}',
+              );
+              final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+              launchUrl(url);
+            },
+            icon: const Icon(Icons.directions),
+            label: const Text('Get Directions'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color? color;
+
+  const _InfoRow({required this.icon, required this.text, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color ?? Colors.grey[700]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: color),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -952,6 +1273,7 @@ class SearchTab extends StatefulWidget {
   final double radius;
   final Future<WHIResult> Function(String zip, double radius) onSearch;
   final VoidCallback onUpgradeRequested;
+  final ValueChanged<LocationDetail> onLocationSelected;
 
   const SearchTab({
     super.key,
@@ -959,6 +1281,7 @@ class SearchTab extends StatefulWidget {
     required this.radius,
     required this.onSearch,
     required this.onUpgradeRequested,
+    required this.onLocationSelected,
   });
 
   @override
@@ -1122,7 +1445,7 @@ class _SearchTabState extends State<SearchTab> {
             ),
           ),
           const SizedBox(height: 8),
-          ...buildLocationCards(_result!.locations),
+          ...buildLocationCards(_result!.locations, onTap: widget.onLocationSelected),
         ],
       ],
     );
@@ -1469,11 +1792,13 @@ StatusInfo statusInfoFor(double openPct) {
   );
 }
 
-List<Widget> buildLocationCards(List<LocationDetail> locations) {
+List<Widget> buildLocationCards(List<LocationDetail> locations,
+    {required ValueChanged<LocationDetail> onTap}) {
   return locations
       .map(
         (loc) => Card(
           child: ListTile(
+            onTap: () => onTap(loc),
             leading: Icon(
               loc.status == 'Open' ? Icons.check_circle : Icons.cancel,
               color: loc.status == 'Open' ? Colors.green : Colors.red,
@@ -1518,17 +1843,24 @@ class BasicLocation {
 class LocationDetail {
   final String id;
   final String? name;
+  final String? address;
   final String? city;
   final String? state;
+  final String? zip;
+  final String? phone;
   final String status; // Open/Closed
   final double lat;
   final double lon;
   double? distanceMiles;
+
   LocationDetail({
     required this.id,
     this.name,
+    this.address,
     this.city,
     this.state,
+    this.zip,
+    this.phone,
     required this.status,
     required this.lat,
     required this.lon,
