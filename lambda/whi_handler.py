@@ -170,22 +170,24 @@ def get_all_from_db() -> List[Dict]:
 def get_locations_with_failsafe() -> Tuple[List[Dict], str]:
     """Get locations from source, or fallback to DB if source fails."""
     # PERFORMANCE OPTIMIZATION:
-    # User requests should always be served from DynamoDB to avoid
-    # API Gateway/CloudFront timeouts (29s limit).
-    # The background CRON job (EventBridge) handles the expensive scraper updates.
+    # User requests serve from DynamoDB for speed (< 1s).
+    # Background cron job handles the slow 48s scraper.
 
     db_items = get_all_from_db()
 
     # If DB has data, return it immediately (even if slightly stale)
     if db_items and len(db_items) > 100:
         print("Serving from persistent DynamoDB storage.")
-        def decimal_default(obj):
+        # Helper to convert Decimal back to float for API response
+        def decimal_to_float(obj):
             if isinstance(obj, Decimal):
-                return float(obj) if obj % 1 > 0 else int(obj)
+                return float(obj)
             raise TypeError
-        return json.loads(json.dumps(db_items, default=decimal_default)), "database"
 
-    # Only attempt live fetch if DB is empty (Cold Start / First run)
+        clean_locations = json.loads(json.dumps(db_items, default=decimal_to_float))
+        return clean_locations, "database"
+
+    # Only attempt live fetch if DB is empty (First run or wiped)
     print("Database is empty, attempting emergency live fetch...")
     try:
         locations = fetch_all_from_source()
@@ -304,7 +306,7 @@ def lambda_handler(event, context):
                 'body': json.dumps({
                     "status": "healthy",
                     "service": "Waffle House Index API",
-                    "version": "2.1.1",
+                    "version": "2.1.2",
                     "runtime": "AWS Lambda",
                     "persistent_storage": "enabled"
                 })

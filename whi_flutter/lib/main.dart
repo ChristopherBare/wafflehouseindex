@@ -654,6 +654,9 @@ class _WHIHomePageState extends State<WHIHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 700;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isMinimalWeb ? 'Waffle House Index' : _titleForIndex(_selectedIndex)),
@@ -679,7 +682,7 @@ class _WHIHomePageState extends State<WHIHomePage> {
           final result = snapshot.data!;
           _maybeSendAlert(result);
 
-          if (_isMinimalWeb) {
+          if (_isMinimalWeb && !isSmallScreen) {
             return MinimalWebLayout(
               result: result,
               radius: _radius,
@@ -688,22 +691,24 @@ class _WHIHomePageState extends State<WHIHomePage> {
             );
           }
 
-          return IndexedStack(
-            index: _selectedIndex,
-            children: [
-              HomeTab(
-                result: result,
-                radius: _radius,
-                isLoading: _isLoading,
-                onRadiusChanged: _handleRadiusChanged,
-                onRefresh: _refresh,
-                onLocationSelected: _handleLocationSelected,
-              ),
-              MapTab(
-                result: result,
-                radius: _radius,
-                isLoading: _isLoading,
-              ),
+          final List<Widget> tabs = [
+            HomeTab(
+              result: result,
+              radius: _radius,
+              isLoading: _isLoading,
+              onRadiusChanged: _handleRadiusChanged,
+              onRefresh: _refresh,
+              onLocationSelected: _handleLocationSelected,
+            ),
+            MapTab(
+              result: result,
+              radius: _radius,
+              isLoading: _isLoading,
+            ),
+          ];
+
+          if (!_isMinimalWeb) {
+            tabs.addAll([
               SearchTab(
                 isPremium: _isPremium,
                 radius: _radius,
@@ -724,37 +729,47 @@ class _WHIHomePageState extends State<WHIHomePage> {
                 alertThreshold: _alertThreshold,
                 onAlertThresholdChanged: _updateAlertThreshold,
               ),
-            ],
+            ]);
+          }
+
+          // Ensure index is valid after filtering tabs
+          final safeIndex = _selectedIndex < tabs.length ? _selectedIndex : 0;
+
+          return IndexedStack(
+            index: safeIndex,
+            children: tabs,
           );
         },
       ),
-      bottomNavigationBar: _isMinimalWeb
+      bottomNavigationBar: (_isMinimalWeb && !isSmallScreen)
           ? null
           : BottomNavigationBar(
-              currentIndex: _selectedIndex,
+              currentIndex: _selectedIndex < (_isMinimalWeb ? 2 : 4) ? _selectedIndex : 0,
               onTap: (value) {
                 setState(() {
                   _selectedIndex = value;
                 });
               },
               type: BottomNavigationBarType.fixed,
-              items: const [
-                BottomNavigationBarItem(
+              items: [
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.home),
                   label: 'Home',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.map),
                   label: 'Map',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search),
-                  label: 'Search',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.menu),
-                  label: 'Menu',
-                ),
+                if (!_isMinimalWeb) ...const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.search),
+                    label: 'Search',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.menu),
+                    label: 'Menu',
+                  ),
+                ],
               ],
             ),
     );
