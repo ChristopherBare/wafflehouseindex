@@ -189,6 +189,13 @@ resource "aws_api_gateway_method" "health_get" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method" "health_options" {
+  rest_api_id   = aws_api_gateway_rest_api.whi_api.id
+  resource_id   = aws_api_gateway_resource.health.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
 # Lambda integrations
 resource "aws_api_gateway_integration" "coordinates_get" {
   rest_api_id = aws_api_gateway_rest_api.whi_api.id
@@ -240,6 +247,39 @@ resource "aws_api_gateway_integration" "health_get" {
   uri                    = aws_lambda_function.whi_api.invoke_arn
 }
 
+resource "aws_api_gateway_integration" "health_options" {
+  rest_api_id = aws_api_gateway_rest_api.whi_api.id
+  resource_id = aws_api_gateway_resource.health.id
+  http_method = aws_api_gateway_method.health_options.http_method
+
+  integration_http_method = "POST"
+  type                   = "AWS_PROXY"
+  uri                    = aws_lambda_function.whi_api.invoke_arn
+}
+
+# Add Gateway Responses for CORS on errors (4xx, 5xx)
+resource "aws_api_gateway_gateway_response" "default_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.whi_api.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Accept,Origin,User-Agent'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.whi_api.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Accept,Origin,User-Agent'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+  }
+}
+
 # Lambda permission for API Gateway
 resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
@@ -259,6 +299,7 @@ resource "aws_api_gateway_deployment" "whi_api" {
     aws_api_gateway_integration.zip_get,
     aws_api_gateway_integration.zip_options,
     aws_api_gateway_integration.health_get,
+    aws_api_gateway_integration.health_options,
   ]
 
   lifecycle {

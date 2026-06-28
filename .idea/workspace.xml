@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="Updated lambda code to support new wafflehouse site map." />
+    <list default="true" id="2daaee9b-d493-40bf-83a8-28175880d50c" name="Changes" comment="Update Lambda again.">
+      <change afterPath="$PROJECT_DIR$/.github/workflows/deploy-website.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terraform-website/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whi_flutter/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/whi_flutter/lib/main.dart" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -72,7 +79,7 @@
     &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/christopher/snap/flutter/common/flutter/bin/cache/dart-sdk&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/christopher/development/flutter/bin/cache/dart-sdk&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -195,7 +202,23 @@
       <option name="project" value="LOCAL" />
       <updated>1782003718476</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Updated lambda code to support new wafflehouse site map.">
+      <option name="closed" value="true" />
+      <created>1782003872889</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1782003872889</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Updated lambda code to support new wafflehouse site map.">
+      <option name="closed" value="true" />
+      <created>1782004079004</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1782004079004</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

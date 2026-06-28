@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config.dart';
 
+const bool _isMinimalWeb = bool.fromEnvironment('MINIMAL_WEB', defaultValue: false);
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const WHIApp());
@@ -75,6 +77,9 @@ class _WHIHomePageState extends State<WHIHomePage> {
   @override
   void initState() {
     super.initState();
+    if (_isMinimalWeb) {
+      _selectedIndex = 1;
+    }
     _future = _load(_radius);
     _loadPreferences();
     _initNotifications();
@@ -638,7 +643,7 @@ class _WHIHomePageState extends State<WHIHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titleForIndex(_selectedIndex)),
+        title: Text(_isMinimalWeb ? 'Waffle House Index' : _titleForIndex(_selectedIndex)),
       ),
       body: FutureBuilder<WHIResult>(
         future: _future,
@@ -660,6 +665,14 @@ class _WHIHomePageState extends State<WHIHomePage> {
 
           final result = snapshot.data!;
           _maybeSendAlert(result);
+
+          if (_isMinimalWeb) {
+            return MapTab(
+              result: result,
+              radius: _radius,
+              isLoading: _isLoading,
+            );
+          }
 
           return IndexedStack(
             index: _selectedIndex,
@@ -699,33 +712,35 @@ class _WHIHomePageState extends State<WHIHomePage> {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (value) {
-          setState(() {
-            _selectedIndex = value;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'Menu',
-          ),
-        ],
-      ),
+      bottomNavigationBar: _isMinimalWeb
+          ? null
+          : BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (value) {
+                setState(() {
+                  _selectedIndex = value;
+                });
+              },
+              type: BottomNavigationBarType.fixed,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.map),
+                  label: 'Map',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.search),
+                  label: 'Search',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.menu),
+                  label: 'Menu',
+                ),
+              ],
+            ),
     );
   }
 }
