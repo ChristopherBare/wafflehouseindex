@@ -13,18 +13,19 @@ terraform {
     region         = "us-east-1"
     dynamodb_table = "whi-terraform-lock"
   }
-  required_providers {
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "5.5.0"
-    }
-  }
+  # Cloudflare provider commented out for now
+  # required_providers {
+  #   cloudflare = {
+  #     source  = "cloudflare/cloudflare"
+  #     version = "5.5.0"
+  #   }
+  # }
 }
 
 # Cloudflare provider (for DNS validation + CNAMEs)
-provider "cloudflare" {
-  api_token = var.cloudflare_api_token
-}
+# provider "cloudflare" {
+#   api_token = var.cloudflare_api_token
+# }
 
 ########################################
 # Inputs
@@ -51,7 +52,8 @@ variable "domain_name" {
 
 # Hostnames you want on the cert and as CloudFront aliases
 locals {
-  use_custom_domain = var.cloudflare_api_token != "" && var.cloudflare_zone_id != ""
+  # Forced to false for now as requested
+  use_custom_domain = false # var.cloudflare_api_token != "" && var.cloudflare_zone_id != ""
   domain_names = local.use_custom_domain ? [
     var.domain_name,
     "www.${var.domain_name}",
@@ -114,42 +116,42 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 # ACM Certificate (DNS validation via Cloudflare)
 ########################################
 
-resource "aws_acm_certificate" "cf_cert" {
-  count                     = local.use_custom_domain ? 1 : 0
-  domain_name               = local.domain_names[0] # apex
-  subject_alternative_names = slice(local.domain_names, 1, length(local.domain_names))
-  validation_method         = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+# resource "aws_acm_certificate" "cf_cert" {
+#   count                     = local.use_custom_domain ? 1 : 0
+#   domain_name               = local.domain_names[0] # apex
+#   subject_alternative_names = slice(local.domain_names, 1, length(local.domain_names))
+#   validation_method         = "DNS"
+#
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
 
 # Publish ACM DNS validation CNAMEs into Cloudflare (DNS-only)
-resource "cloudflare_dns_record" "acm_validation" {
-  for_each = local.use_custom_domain ? {
-    for dvo in aws_acm_certificate.cf_cert[0].domain_validation_options :
-    dvo.domain_name => {
-      name  = dvo.resource_record_name
-      type  = dvo.resource_record_type
-      value = dvo.resource_record_value
-    }
-  } : {}
-
-  zone_id = var.cloudflare_zone_id
-  name    = each.value.name
-  type    = each.value.type
-  content = each.value.value
-  ttl     = 300
-  proxied = false
-}
+# resource "cloudflare_dns_record" "acm_validation" {
+#   for_each = local.use_custom_domain ? {
+#     for dvo in aws_acm_certificate.cf_cert[0].domain_validation_options :
+#     dvo.domain_name => {
+#       name  = dvo.resource_record_name
+#       type  = dvo.resource_record_type
+#       value = dvo.resource_record_value
+#     }
+#   } : {}
+#
+#   zone_id = var.cloudflare_zone_id
+#   name    = each.value.name
+#   type    = each.value.type
+#   content = each.value.value
+#   ttl     = 300
+#   proxied = false
+# }
 
 # Tell ACM to verify the DNS records
-resource "aws_acm_certificate_validation" "cf_cert" {
-  count                   = local.use_custom_domain ? 1 : 0
-  certificate_arn         = aws_acm_certificate.cf_cert[0].arn
-  validation_record_fqdns = [for r in cloudflare_dns_record.acm_validation : r.name]
-}
+# resource "aws_acm_certificate_validation" "cf_cert" {
+#   count                   = local.use_custom_domain ? 1 : 0
+#   certificate_arn         = aws_acm_certificate.cf_cert[0].arn
+#   validation_record_fqdns = [for r in cloudflare_dns_record.acm_validation : r.name]
+# }
 
 ########################################
 # CloudFront Distribution (uses OAC + custom domains)
@@ -216,11 +218,11 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     }
   }
 
-  # Use ACM cert or default CloudFront cert
+  # Use default CloudFront cert for now
   viewer_certificate {
-    acm_certificate_arn      = local.use_custom_domain ? aws_acm_certificate_validation.cf_cert[0].certificate_arn : null
-    cloudfront_default_certificate = !local.use_custom_domain
-    ssl_support_method       = local.use_custom_domain ? "sni-only" : null
+    # acm_certificate_arn      = local.use_custom_domain ? aws_acm_certificate_validation.cf_cert[0].certificate_arn : null
+    cloudfront_default_certificate = true # !local.use_custom_domain
+    # ssl_support_method       = local.use_custom_domain ? "sni-only" : null
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
@@ -275,26 +277,26 @@ resource "aws_s3_bucket_policy" "website_bucket" {
 ########################################
 
 # Apex @ → CloudFront
-resource "cloudflare_dns_record" "apex_to_cf" {
-  count   = local.use_custom_domain ? 1 : 0
-  zone_id = var.cloudflare_zone_id
-  name    = "@"
-  type    = "CNAME"
-  content = aws_cloudfront_distribution.website_distribution.domain_name
-  ttl     = 300
-  proxied = false
-}
+# resource "cloudflare_dns_record" "apex_to_cf" {
+#   count   = local.use_custom_domain ? 1 : 0
+#   zone_id = var.cloudflare_zone_id
+#   name    = "@"
+#   type    = "CNAME"
+#   content = aws_cloudfront_distribution.website_distribution.domain_name
+#   ttl     = 300
+#   proxied = false
+# }
 
 # www → CloudFront
-resource "cloudflare_dns_record" "www_to_cf" {
-  count   = local.use_custom_domain ? 1 : 0
-  zone_id = var.cloudflare_zone_id
-  name    = "www"
-  type    = "CNAME"
-  content = aws_cloudfront_distribution.website_distribution.domain_name
-  ttl     = 300
-  proxied = false
-}
+# resource "cloudflare_dns_record" "www_to_cf" {
+#   count   = local.use_custom_domain ? 1 : 0
+#   zone_id = var.cloudflare_zone_id
+#   name    = "www"
+#   type    = "CNAME"
+#   content = aws_cloudfront_distribution.website_distribution.domain_name
+#   ttl     = 300
+#   proxied = false
+# }
 
 ########################################
 # Outputs
