@@ -94,7 +94,7 @@ resource "aws_lambda_function" "whi_api" {
   handler         = "whi_handler.lambda_handler"
   source_code_hash = filebase64sha256("../lambda/whi_handler.zip")
   runtime         = "python3.11"
-  timeout         = 60  # Allow time for multi-region API fetch on cache miss
+  timeout         = 120  # Increased for bulk DB sync and scan
   memory_size     = 512  # Needed to process ~2000 location API responses
 
   environment {
@@ -403,11 +403,11 @@ resource "aws_cloudfront_distribution" "whi_api" {
   }
 }
 
-# EventBridge rule for scheduled cache refresh (every 30 minutes)
+# EventBridge rule for scheduled cache refresh (every 1 hour)
 resource "aws_cloudwatch_event_rule" "cache_refresh" {
   name                = "whi-cache-refresh"
-  description         = "Refresh WHI location cache every 30 minutes"
-  schedule_expression = "rate(30 minutes)"
+  description         = "Refresh WHI location cache every 1 hour"
+  schedule_expression = "rate(1 hour)"
 }
 
 resource "aws_cloudwatch_event_target" "cache_refresh" {
@@ -418,6 +418,7 @@ resource "aws_cloudwatch_event_target" "cache_refresh" {
   input = jsonencode({
     path       = "/api/refresh"
     httpMethod = "GET"
+    isScheduled = true
   })
 }
 
